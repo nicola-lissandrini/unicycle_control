@@ -25,6 +25,8 @@ public:
 	void referenceCallback (const geometry_msgs::Pose2D &referenceMsg);
 	void publishControl (const torch::Tensor &controlTensor);
 
+	void stop ();
+
 	DEF_SHARED(UnicycleControlNode)
 
 

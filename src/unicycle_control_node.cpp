@@ -1,5 +1,7 @@
 #include "../include/unicycle_control_node.h"
 
+#include <signal.h>
+
 using namespace std;
 using namespace nlib;
 using namespace torch;
@@ -14,6 +16,7 @@ void controlTensorToTwist (const torch::Tensor &controlTensor, geometry_msgs::Tw
 	controlMsg.linear.x = controlTensor[0].item().toFloat ();
 	controlMsg.angular.z = controlTensor[1].item().toFloat ();
 }
+
 
 UnicycleControlNode::UnicycleControlNode (int &argc, char **argv, const string &name, uint32_t options):
 	 Base (argc, argv, name, options)
@@ -54,15 +57,29 @@ void UnicycleControlNode::publishControl (const Tensor &controlTensor) {
 	publish ("cmd_vel", controlMsg);
 }
 
+void UnicycleControlNode::stop() {
+	publish ("cmd_vel", geometry_msgs::Twist ());
+}
+
 void UnicycleControlNode::onSynchronousClock (const ros::TimerEvent &timeEvent) {
 	sources()->callSource (_stepChannel);
 }
 
+UnicycleControlNode *ucnPtr;
+
+void sigint (int sig) {
+	ucnPtr->stop ();
+
+	ros::shutdown ();
+}
+
 int main (int argc, char *argv[])
 {
-    UnicycleControlNode ucn(argc, argv, "unicycle_control");
+	ucnPtr = new UnicycleControlNode (argc, argv, "unicycle_control");
 
-    return ucn.spin ();
+	signal (SIGINT, sigint);
+
+	return ucnPtr->spin ();
 }
 
 

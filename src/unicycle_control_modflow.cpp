@@ -52,6 +52,11 @@ Tensor ControlModule::getControl ()
 
     Tensor refComplex = torch::complex (_currentReference[0], _currentReference[1]);
 
+	if (_currentReference.norm ().item ().toFloat () < 1e-6) {
+		QUA;
+		return torch::zeros ({2}, kFloat);
+	}
+
     // Check if reference is behind the heading direction
     if (real (refComplex).lt (0).item().toBool ())  {
         // If so, reverse off
