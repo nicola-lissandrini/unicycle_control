@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(unicycle_control)
 
-add_compile_options(-std=c++14)
+add_compile_options(-std=c++17)
 add_compile_options(-ffast-math)
 add_compile_options(-Wno-pmf-conversions)
 
