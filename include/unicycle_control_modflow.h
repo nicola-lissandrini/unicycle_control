@@ -24,6 +24,7 @@ public:
 		float targetVel;
 		float scaleFactor;
 		float scaleFactorOffset;
+		std::chrono::milliseconds reverseTimeThreshold_ms;
 	};
 
     ControlModule (nlib::NlModFlow *modFlow);
@@ -41,6 +42,8 @@ private:
 	torch::Tensor getControl ();
 
 private:
+	bool lastReversed;
+	std::chrono::time_point<std::chrono::system_clock> lastReversedStart;
 	float _lastObstacle;
 	Params _params;
     nlib::ReadyFlagsStr _flags;

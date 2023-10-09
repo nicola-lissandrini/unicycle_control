@@ -12,6 +12,8 @@ ControlModule::ControlModule(nlib::NlModFlow *modFlow):
     nlib::NlModule (modFlow, "control")
 {
     _flags.addFlag ("first_reference");
+
+	lastReversed = false;
 }
 
 void ControlModule::setupNetwork ()
@@ -30,6 +32,7 @@ void ControlModule::initParams (const NlParams &nlParams)
         .targetVel = nlParams.get<float> ("target_vel"),
         .scaleFactor = nlParams.get<float> ("scale_factor"),
         .scaleFactorOffset = nlParams.get<float> ("scale_factor_offset"),
+		.reverseTimeThreshold_ms = std::chrono::milliseconds (nlParams.get<int> ("reverse_time_threshold_ms"))
     };
 }
 
@@ -54,23 +57,33 @@ void ControlModule::stepSlot ()
 
 Tensor ControlModule::getControl ()
 {
-    int direction = 1;
+	// Currently use locobot in reverse
+	int direction = -1;
 
-    Tensor refComplex = torch::complex (_currentReference[0], _currentReference[1]);
+	Tensor refComplex = -torch::complex (_currentReference[0], _currentReference[1]);
 
-	if (_currentReference.norm ().item ().toFloat () < 1e-6) {
+
+	if (_currentReference.norm ().item ().toFloat () < 1e-6)
 		return torch::zeros ({2}, kFloat);
+	
+	
+
+	if (real (refComplex).lt (0).item ().toBool ()) {
+		if (!lastReversed)
+			lastReversedStart = std::chrono::system_clock::now ();
+
+		lastReversed = true;
+
+		if (std::chrono::system_clock::now () - lastReversedStart < _params.reverseTimeThreshold_ms) {
+			refComplex = - refComplex;
+			direction = 1;
+		}
+	} else {
+		lastReversed = false;
 	}
 
-    // Check if reference is behind the heading direction
-    // Disabled - force to go reversed
-    //if (real (refComplex).lt (0).item ().toBool ()) {
-        // If so, reverse off
-        refComplex = - refComplex;
-        // and invert commands
-        direction = -1;
+	COUTN(refComplex);
 
-    //}
     Tensor diff = refComplex.log ();
     Tensor angleDiff = imag (diff);
     Tensor omega = _params.omegaGain * angleDiff;

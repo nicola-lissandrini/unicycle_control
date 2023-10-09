@@ -31,11 +31,14 @@ public:
 
 	DEF_SHARED(UnicycleControlNode)
 
+private:
+	bool inThreshold ();
 
 protected:
 	void onSynchronousClock (const ros::TimerEvent &timeEvent);
 
 private:
+	std::chrono::time_point<std::chrono::system_clock> _last;
 	nlib::Channel _referenceChannel, _stepChannel, _obstacleChannel;
 };
 

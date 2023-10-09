@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 
 <launch>
+	<arg name="standalone" default="true" />
+
 	<rosparam command="load" file="$(find unicycle_control)/config/unicycle_control.yaml" />
+	<rosparam if="$(arg standalone)" command="load" file="$(find unicycle_control)/config/standalone_ros.yaml" />
 	<node type="unicycle_control" name="unicycle_control" pkg="unicycle_control" output="screen" />
+
 </launch>

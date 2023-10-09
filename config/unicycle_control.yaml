@@ -6,3 +6,5 @@ unicycle_control:
     target_vel: 0.22
     scale_factor: 0.85
     scale_factor_offset: 0.075
+    reverse_time_threshold_ms: 500
+
