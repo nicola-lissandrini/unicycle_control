@@ -24,6 +24,7 @@ UnicycleControlNode::UnicycleControlNode (int &argc, char **argv, const string &
 	init<ModFlow> ();
 
     _referenceChannel = sources()->declareSource<Tensor> ("reference_source");
+    _obstacleChannel = sources()->declareSource<float> ("obstacle_source");
 	_stepChannel = sources()->declareSource<> ("step_source");
 
     sinks()->declareSink ("publish_control", &UnicycleControlNode::publishControl, this);
@@ -40,7 +41,16 @@ void UnicycleControlNode::initParams ()
 void UnicycleControlNode::initROS ()
 {
     addSub ("reference", _nlParams.get<int> ("topics/queue_size", 1), &UnicycleControlNode::referenceCallback);
+    addSub ("scan", 1, &UnicycleControlNode::scanCallback);
     addPub<geometry_msgs::Twist> ("cmd_vel", _nlParams.get<int> ("topics/queue_size", 1));
+}
+
+void UnicycleControlNode::scanCallback (const sensor_msgs::LaserScan &scanMsg) {
+	const auto &ranges = scanMsg.ranges;
+
+	float obstacle = *std::min_element (ranges.begin (), ranges.end ());
+
+	sources()->callSource (_obstacleChannel, obstacle);
 }
 
 void UnicycleControlNode::referenceCallback (const geometry_msgs::Pose2D &referenceMsg) {

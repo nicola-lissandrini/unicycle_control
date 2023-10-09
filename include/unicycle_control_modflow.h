@@ -23,6 +23,7 @@ public:
 		float omegaGain;
 		float targetVel;
 		float scaleFactor;
+		float scaleFactorOffset;
 	};
 
     ControlModule (nlib::NlModFlow *modFlow);
@@ -31,14 +32,16 @@ public:
 	void setupNetwork () override;
 
 	void referenceSlot (const torch::Tensor &reference);
+	void obstacleSlot (float obstacle);
 	void stepSlot();
 
 	DEF_SHARED(ControlModule)
 
-protected:
+private:
 	torch::Tensor getControl ();
 
 private:
+	float _lastObstacle;
 	Params _params;
     nlib::ReadyFlagsStr _flags;
 	torch::Tensor _currentReference;
