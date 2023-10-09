@@ -53,7 +53,6 @@ Tensor ControlModule::getControl ()
     Tensor refComplex = torch::complex (_currentReference[0], _currentReference[1]);
 
 	if (_currentReference.norm ().item ().toFloat () < 1e-6) {
-		QUA;
 		return torch::zeros ({2}, kFloat);
 	}
 
